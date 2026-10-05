@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Core;
 using MessageBox = System.Windows.MessageBox;
 
@@ -27,7 +28,9 @@ public partial class SendDialog : Window
 
     private async void Send_Click(object sender, RoutedEventArgs e)
     {
-        var pin = PinBox.Password.Trim();
+        var pin = (VisiblePinBox.Visibility == Visibility.Visible
+            ? VisiblePinBox.Text
+            : PinBox.Password).Trim();
         if (pin.Length is < 4 or > 6 || !pin.All(char.IsDigit))
         {
             MessageBox.Show("Use a PIN with 4 to 6 digits.", "PIN required", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -58,7 +61,7 @@ public partial class SendDialog : Window
                 fileName, stream, "application/octet-stream", settings.DeviceId,
                 ExpiresAt: DateTimeOffset.UtcNow.AddHours(settings.ExpiryHours),
                 RecipientCount: recipients, Note: NoteBox.Text.Trim(),
-                Visibility: (VisibilityBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Anyone in the room"));
+                Visibility: OfficeOnlyRadio.IsChecked == true ? "Office only" : "Anyone in the room"));
             DialogResult = true;
         }
         catch (Exception ex)
@@ -69,6 +72,52 @@ public partial class SendDialog : Window
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
+
+    private void PinBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        e.Handled = e.Text.Any(character => !char.IsDigit(character));
+    }
+
+    private void PinBox_Pasting(object sender, DataObjectPastingEventArgs e)
+    {
+        if (!e.DataObject.GetDataPresent(System.Windows.DataFormats.UnicodeText))
+        {
+            e.CancelCommand();
+            return;
+        }
+
+        var text = e.DataObject.GetData(System.Windows.DataFormats.UnicodeText) as string;
+        if (string.IsNullOrEmpty(text) || text.Any(character => !char.IsDigit(character)))
+            e.CancelCommand();
+    }
+
+    private void ShowPin_Click(object sender, RoutedEventArgs e)
+    {
+        if (VisiblePinBox.Visibility == Visibility.Visible)
+        {
+            PinBox.Password = VisiblePinBox.Text;
+            VisiblePinBox.Visibility = Visibility.Collapsed;
+            PinBox.Visibility = Visibility.Visible;
+            ShowPinButton.ToolTip = "Show PIN";
+            PinBox.Focus();
+        }
+        else
+        {
+            VisiblePinBox.Text = PinBox.Password;
+            PinBox.Visibility = Visibility.Collapsed;
+            VisiblePinBox.Visibility = Visibility.Visible;
+            ShowPinButton.ToolTip = "Hide PIN";
+            VisiblePinBox.Focus();
+            VisiblePinBox.CaretIndex = VisiblePinBox.Text.Length;
+        }
+    }
+
+    private void VisiblePinBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (VisiblePinBox.Text.Any(character => !char.IsDigit(character)))
+            VisiblePinBox.Text = new string(VisiblePinBox.Text.Where(char.IsDigit).ToArray());
+    }
+
     private static string PreserveSourceExtension(string name, string sourceExtension)
     {
         name = Path.GetFileName(name.Trim());

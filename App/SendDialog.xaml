@@ -29,14 +29,29 @@
             <TextBlock Text="Note for recipients" FontWeight="SemiBold"/>
             <TextBox x:Name="NoteBox" Margin="0,7,0,15" Height="72" AcceptsReturn="True" TextWrapping="Wrap"/>
             <TextBlock Text="PIN (4–6 digits)" FontWeight="SemiBold"/>
-            <PasswordBox x:Name="PinBox" Margin="0,7,0,15" Padding="11,8"/>
+            <Grid Margin="0,7,0,15">
+                <PasswordBox x:Name="PinBox" Padding="11,9" MaxLength="6"
+                             PreviewTextInput="PinBox_PreviewTextInput"
+                             DataObject.Pasting="PinBox_Pasting"/>
+                <TextBox x:Name="VisiblePinBox" Padding="11,9" MaxLength="6"
+                         Visibility="Collapsed"
+                         PreviewTextInput="PinBox_PreviewTextInput"
+                         DataObject.Pasting="PinBox_Pasting"
+                         TextChanged="VisiblePinBox_TextChanged"/>
+                <Button x:Name="ShowPinButton" Content="◉" Width="34" Height="30"
+                        HorizontalAlignment="Right" Margin="0,0,5,0"
+                        Padding="0" Background="Transparent" Foreground="#667085"
+                        ToolTip="Show PIN" Click="ShowPin_Click"/>
+            </Grid>
             <TextBlock Text="Recipients" FontWeight="SemiBold"/>
             <TextBox x:Name="RecipientCountBox" Text="1" Margin="0,7,0,15"/>
             <TextBlock Text="Visibility" FontWeight="SemiBold"/>
-            <ComboBox x:Name="VisibilityBox" Margin="0,7,0,15">
-                <ComboBoxItem Content="Anyone in the room" IsSelected="True"/>
-                <ComboBoxItem Content="Office only"/>
-            </ComboBox>
+            <StackPanel Margin="0,8,0,15">
+                <RadioButton x:Name="OfficeOnlyRadio" Content="Office only" IsChecked="True"
+                             GroupName="Visibility" Margin="0,0,0,8"/>
+                <RadioButton x:Name="AnyoneRadio" Content="Anyone in the room"
+                             GroupName="Visibility"/>
+            </StackPanel>
             <TextBlock Text="The file is encrypted before it leaves this device."
                        Foreground="#667085" TextWrapping="Wrap"/>
         </StackPanel>
