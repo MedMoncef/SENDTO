@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="App/App.csproj" />
+  <Project Path="Core/Core.csproj" />
+  <Project Path="Crypto/Crypto.csproj" />
+  <Project Path="Transport.Cloud/Transport.Cloud.csproj" />
+  <Project Path="Transport.Lan/Transport.Lan.csproj" />
+</Solution>
