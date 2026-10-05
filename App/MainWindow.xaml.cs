@@ -110,6 +110,29 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void DeleteTransfer_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if ((sender as System.Windows.Controls.Button)?.Tag is not TransferRow row)
+            return;
+        if (MessageBox.Show($"Delete '{row.DisplayName}' from this room?", "Delete transfer",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+        try
+        {
+            await transport.RevokeAsync(Core.RoomKey.CreateRoomId(settings.RoomKey), row.Metadata.TransferId);
+            transfers.Remove(row);
+            EmptyStateText.Text = transfers.Count == 0
+                ? "No files yet. Send one to get started."
+                : "The transfer was deleted.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"The transfer could not be deleted.\n\n{ex.Message}", "Delete failed",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         var filter = SearchBox.Text.Trim();

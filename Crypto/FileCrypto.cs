@@ -25,11 +25,11 @@ public static class FileEncryptor
         RandomNumberGenerator.Fill(key);
         var nonce = SecretAeadXChaCha20Poly1305.GenerateNonce();
         var associatedData = Encoding.UTF8.GetBytes(metadata.TransferId);
-        var ciphertext = SecretAeadXChaCha20Poly1305.Encrypt(plain, associatedData, nonce, key);
+        var ciphertext = SecretAeadXChaCha20Poly1305.Encrypt(plain, nonce, key, associatedData);
         var metadataBytes = JsonSerializer.SerializeToUtf8Bytes(metadata, JsonOptions);
         var metadataNonce = SecretAeadXChaCha20Poly1305.GenerateNonce();
         var encryptedMetadata = metadataNonce.Concat(
-            SecretAeadXChaCha20Poly1305.Encrypt(metadataBytes, associatedData, metadataNonce, key)).ToArray();
+            SecretAeadXChaCha20Poly1305.Encrypt(metadataBytes, metadataNonce, key, associatedData)).ToArray();
         CryptographicOperations.ZeroMemory(plain);
         return new(encryptedMetadata, ciphertext, key, nonce);
     }
@@ -39,8 +39,8 @@ public static class FileEncryptor
         var associatedData = Encoding.UTF8.GetBytes(transferId);
         var metadataNonce = encrypted.EncryptedMetadata[..24];
         var metadata = SecretAeadXChaCha20Poly1305.Decrypt(
-            encrypted.EncryptedMetadata[24..], associatedData, metadataNonce, encrypted.Key);
-        return SecretAeadXChaCha20Poly1305.Decrypt(encrypted.Ciphertext, associatedData, encrypted.Nonce, encrypted.Key);
+            encrypted.EncryptedMetadata[24..], metadataNonce, encrypted.Key, associatedData);
+        return SecretAeadXChaCha20Poly1305.Decrypt(encrypted.Ciphertext, encrypted.Nonce, encrypted.Key, associatedData);
     }
 
     public static TransferMetadata DecryptMetadata(EncryptedFile encrypted, string transferId)
@@ -48,7 +48,7 @@ public static class FileEncryptor
         var associatedData = Encoding.UTF8.GetBytes(transferId);
         var nonce = encrypted.EncryptedMetadata[..24];
         var bytes = SecretAeadXChaCha20Poly1305.Decrypt(
-            encrypted.EncryptedMetadata[24..], associatedData, nonce, encrypted.Key);
+            encrypted.EncryptedMetadata[24..], nonce, encrypted.Key, associatedData);
         return JsonSerializer.Deserialize<TransferMetadata>(bytes, JsonOptions)
             ?? throw new CryptographicException("Invalid encrypted metadata.");
     }
@@ -67,7 +67,7 @@ public static class FileEncryptor
         var roomKey = DeriveRoomKey(roomPin, roomId, Array.Empty<byte>());
         var nonce = SecretAeadXChaCha20Poly1305.GenerateNonce();
         var protectedKey = SecretAeadXChaCha20Poly1305.Encrypt(fileKey,
-            Encoding.UTF8.GetBytes(roomId), nonce, roomKey);
+            nonce, roomKey, Encoding.UTF8.GetBytes(roomId));
         return nonce.Concat(protectedKey).ToArray();
     }
 
@@ -77,7 +77,7 @@ public static class FileEncryptor
             throw new CryptographicException("Invalid protected file key.");
         var roomKey = DeriveRoomKey(roomPin, roomId, Array.Empty<byte>());
         return SecretAeadXChaCha20Poly1305.Decrypt(protectedKey[24..],
-            Encoding.UTF8.GetBytes(roomId), protectedKey[..24], roomKey);
+            protectedKey[..24], roomKey, Encoding.UTF8.GetBytes(roomId));
     }
 
     private static async Task<byte[]> ReadAllAsync(Stream stream, CancellationToken ct)

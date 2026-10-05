@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Core;
 using Crypto;
@@ -90,6 +92,13 @@ public sealed class LanTransport : IRoomTransport
         return new ReceivedTransfer(metadata, new MemoryStream(FileEncryptor.Decrypt(encrypted, transferId), writable: false));
     }
 
+    public async Task RevokeAsync(string roomId, string transferId, CancellationToken cancellationToken = default)
+    {
+        await RequestAsync<object>(HttpMethod.Delete,
+            $"v1/rooms/{Uri.EscapeDataString(roomId)}/transfers/{Uri.EscapeDataString(transferId)}",
+            null, cancellationToken);
+    }
+
     public async ValueTask DisposeAsync()
     {
         _listener?.Stop();
@@ -107,6 +116,8 @@ public sealed class LanTransport : IRoomTransport
         using var response = await _client.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException($"LAN peer returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
+        if (response.StatusCode == HttpStatusCode.NoContent)
+            return default;
         return await response.Content.ReadFromJsonAsync<T>(cancellationToken: ct);
     }
 
@@ -120,7 +131,7 @@ public sealed class LanTransport : IRoomTransport
         {
             lock (_gate)
                 _transfers[upload.Metadata.TransferId] = new StoredTransfer(upload.Metadata, upload.ProtectedKey,
-                    upload.Nonce, upload.EncryptedMetadata, upload.Ciphertext);
+                    upload.Nonce, upload.EncryptedMetadata, upload.Ciphertext, GetQueryValue(path, "pin"));
             return Task.FromResult<T?>(ConvertResult<T>(new TransferDescriptor(upload.Metadata,
                 new Uri("http://local/v1/rooms/" + upload.Metadata.RoomId + "/transfers/" + upload.Metadata.TransferId))));
         }
@@ -142,14 +153,37 @@ public sealed class LanTransport : IRoomTransport
             {
                 if (!_transfers.TryGetValue(segments[4], out var value))
                     throw new FileNotFoundException("Transfer not found.");
+                var pin = GetQueryValue(path, "pin");
+                if (!CryptographicOperations.FixedTimeEquals(
+                        Convert.FromHexString(value.PinHash),
+                        SHA256.HashData(Encoding.UTF8.GetBytes(pin))))
+                    throw new UnauthorizedAccessException("Incorrect transfer PIN.");
                 return Task.FromResult<T?>(ConvertResult<T>(new WireTransfer(value.Metadata, value.ProtectedKey,
                     value.Nonce, value.EncryptedMetadata, value.Ciphertext)));
             }
+        }
+        if (method == HttpMethod.Delete && segments.Length == 5)
+        {
+            lock (_gate)
+                _transfers.Remove(segments[4]);
+            return Task.FromResult<T?>(default);
         }
         throw new InvalidOperationException("Unsupported local transfer operation.");
     }
 
     private static T ConvertResult<T>(object value) => (T)value;
+
+    private static string GetQueryValue(string path, string name)
+    {
+        var query = new Uri("http://local/" + path.TrimStart('/')).Query.TrimStart('?');
+        foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = pair.Split('=', 2);
+            if (parts.Length == 2 && string.Equals(Uri.UnescapeDataString(parts[0]), name, StringComparison.Ordinal))
+                return Uri.UnescapeDataString(parts[1]);
+        }
+        return string.Empty;
+    }
 
     private async Task ServeAsync(HttpListener listener, CancellationToken ct)
     {
@@ -186,8 +220,15 @@ public sealed class LanTransport : IRoomTransport
                     var dto = await JsonSerializer.DeserializeAsync<WireTransfer>(context.Request.InputStream);
                     if (dto is null) throw new InvalidDataException();
                     lock (_gate) _transfers[dto.Metadata.TransferId] = new StoredTransfer(dto.Metadata, dto.ProtectedKey,
-                        dto.Nonce, dto.EncryptedMetadata, dto.Ciphertext);
+                        dto.Nonce, dto.EncryptedMetadata, dto.Ciphertext,
+                        context.Request.QueryString["pin"] ?? "");
                     await WriteJsonAsync(context, new TransferDescriptor(dto.Metadata, new Uri(LocalUri!, $"v1/rooms/{roomId}/transfers/{dto.Metadata.TransferId}"))); return;
+                }
+                if (path.Length == 5 && context.Request.HttpMethod == "DELETE")
+                {
+                    lock (_gate) _transfers.Remove(path[4]);
+                    context.Response.StatusCode = 204;
+                    return;
                 }
                 if (path.Length == 5 && context.Request.HttpMethod == "GET")
                 {
@@ -246,13 +287,14 @@ public sealed class LanTransport : IRoomTransport
     private sealed class StoredTransfer
     {
         public StoredTransfer(TransferMetadata metadata, byte[] protectedKey, byte[] nonce,
-            byte[] encryptedMetadata, byte[] ciphertext)
+            byte[] encryptedMetadata, byte[] ciphertext, string pin)
         {
             Metadata = metadata;
             ProtectedKey = protectedKey;
             Nonce = nonce;
             EncryptedMetadata = encryptedMetadata;
             Ciphertext = ciphertext;
+            PinHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(pin)));
             RemainingPickups = metadata.RecipientCount;
         }
 
@@ -261,6 +303,7 @@ public sealed class LanTransport : IRoomTransport
         public byte[] Nonce { get; }
         public byte[] EncryptedMetadata { get; }
         public byte[] Ciphertext { get; }
+        public string PinHash { get; }
         public int RemainingPickups { get; set; }
         public Dictionary<string, int> Attempts { get; } = new(StringComparer.Ordinal);
     }

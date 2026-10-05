@@ -57,4 +57,5 @@ public interface IRoomTransport : IAsyncDisposable
     Task<IReadOnlyList<TransferDescriptor>> ListAsync(string roomId, string pin, CancellationToken cancellationToken = default);
     Task<TransferDescriptor> SendAsync(string roomId, string pin, SendRequest request, CancellationToken cancellationToken = default);
     Task<ReceivedTransfer> FetchAsync(string roomId, string pin, string transferId, CancellationToken cancellationToken = default);
+    Task RevokeAsync(string roomId, string transferId, CancellationToken cancellationToken = default);
 }
