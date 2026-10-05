@@ -28,7 +28,10 @@ public sealed record TransferMetadata(
     DateTimeOffset CreatedAt,
     DateTimeOffset? ExpiresAt,
     string RoomId,
-    int RecipientCount = 1);
+    int RecipientCount = 1,
+    string Note = "",
+    string Visibility = "Anyone in the room",
+    IReadOnlyList<string>? AllowedDeviceIds = null);
 
 public sealed record TransferDescriptor(
     TransferMetadata Metadata,
@@ -41,7 +44,10 @@ public sealed record SendRequest(
     string SenderDeviceId,
     string? RecipientDeviceId = null,
     DateTimeOffset? ExpiresAt = null,
-    int RecipientCount = 1);
+    int RecipientCount = 1,
+    string Note = "",
+    string Visibility = "Anyone in the room",
+    IReadOnlyList<string>? AllowedDeviceIds = null);
 
 public sealed record ReceivedTransfer(TransferMetadata Metadata, Stream Content);
 

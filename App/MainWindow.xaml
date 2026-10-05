@@ -1,81 +1,108 @@
 <Window x:Class="DropRoom.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DropRoom"
-        mc:Ignorable="d"
-        Title="DropRoom" Height="620" Width="980"
-        MinHeight="520" MinWidth="820"
-        WindowStartupLocation="CenterScreen"
-        Background="#F5F7FB">
-    <Grid Margin="28">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <DockPanel Grid.Row="0" Margin="0,0,0,24">
-            <StackPanel>
-                <TextBlock Text="DropRoom" FontSize="30" FontWeight="SemiBold" Foreground="#172033"/>
-                <TextBlock Text="A private shared inbox for your room" Margin="0,4,0,0"
-                           Foreground="#667085" FontSize="14"/>
-            </StackPanel>
-            <Button DockPanel.Dock="Right" Content="Settings" Padding="18,9"
-                    Click="Settings_Click" VerticalAlignment="Center"/>
-        </DockPanel>
-
-        <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="18" Margin="0,0,0,18"
-                BorderBrush="#E4E7EC" BorderThickness="1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        Title="DropRoom" Height="720" Width="1120" MinHeight="600" MinWidth="900"
+        WindowStartupLocation="CenterScreen" Background="#F6F7FB">
+    <Window.Resources>
+        <SolidColorBrush x:Key="Ink" Color="#172033"/>
+        <SolidColorBrush x:Key="Muted" Color="#667085"/>
+        <SolidColorBrush x:Key="Line" Color="#E4E7EC"/>
+        <Style TargetType="Button">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="BorderBrush" Value="#D0D5DD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Background="#171B2D">
+            <Grid Margin="24">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <StackPanel>
-                    <TextBlock Text="Room status" FontWeight="SemiBold" Foreground="#172033"/>
-                    <TextBlock x:Name="RoomStatusText" Text="Loading room…" Margin="0,5,0,0"
-                               Foreground="#667085"/>
+                    <TextBlock Text="DropRoom" Foreground="White" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock Text="Private file sharing" Foreground="#AAB1C5" Margin="0,4,0,0"/>
                 </StackPanel>
-                <Button Grid.Column="1" Content="Receive here…" Padding="16,9" Margin="12,0,8,0"
-                        Click="Receive_Click"/>
-                <Button Grid.Column="2" Content="Send a file…" Padding="16,9"
-                        Click="Send_Click"/>
+                <StackPanel Grid.Row="1" Margin="0,48,0,0">
+                    <Border Background="#2B3050" CornerRadius="9" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="ROOM" FontSize="11" Foreground="#9EA7C2" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="RoomStatusText" Text="Connecting…" Foreground="White" Margin="0,6,0,0"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="Everything is encrypted before sharing." Foreground="#AAB1C5"
+                               TextWrapping="Wrap" Margin="4,10,8,0"/>
+                </StackPanel>
+                <Button Grid.Row="2" Content="⚙  Settings" HorizontalContentAlignment="Left"
+                        Background="Transparent" Foreground="#D7DBEA" Click="Settings_Click"/>
             </Grid>
         </Border>
-
-        <Border Grid.Row="2" Background="White" CornerRadius="10" Padding="18"
-                BorderBrush="#E4E7EC" BorderThickness="1">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <DockPanel Grid.Row="0">
-                    <TextBlock Text="Available files" FontSize="18" FontWeight="SemiBold"
-                               Foreground="#172033"/>
-                    <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="230" Padding="8,6"
-                             TextChanged="SearchBox_TextChanged" ToolTip="Filter files"/>
-                </DockPanel>
-                <TextBlock Grid.Row="1" x:Name="EmptyStateText"
-                           Text="No one else in this room is visible on this network."
-                           Foreground="#667085" Margin="0,14,0,12"/>
-                <ListView Grid.Row="2" x:Name="TransfersList" BorderThickness="0"
-                          SelectionChanged="TransfersList_SelectionChanged">
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn Header="File" DisplayMemberBinding="{Binding DisplayName}" Width="250"/>
-                            <GridViewColumn Header="From" DisplayMemberBinding="{Binding SenderName}" Width="140"/>
-                            <GridViewColumn Header="Size" DisplayMemberBinding="{Binding SizeText}" Width="100"/>
-                            <GridViewColumn Header="Expires" DisplayMemberBinding="{Binding ExpiresText}" Width="140"/>
-                            <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Status}" Width="120"/>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
-            </Grid>
-        </Border>
+        <Grid Grid.Column="1" Margin="34">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <DockPanel Grid.Row="0" Margin="0,0,0,28">
+                <StackPanel>
+                    <TextBlock Text="Your room" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource Ink}"/>
+                    <TextBlock Text="Send a file in seconds, or pick one up where you need it."
+                               Foreground="{StaticResource Muted}" Margin="0,5,0,0" FontSize="14"/>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Receive here" Background="White" Foreground="{StaticResource Ink}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1" Click="Receive_Click"/>
+                    <Button Content="Send a file" Background="#635BFF" Foreground="White" Margin="10,0,0,0"
+                            Click="Send_Click"/>
+                </StackPanel>
+            </DockPanel>
+            <Border Grid.Row="1" Background="#EDEBFF" CornerRadius="12" Padding="16" Margin="0,0,0,20">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="●" Foreground="#635BFF" FontSize="18" Margin="0,0,10,0"/>
+                    <TextBlock Text="LAN mode is active" Foreground="#423B9A" FontWeight="SemiBold"/>
+                    <TextBlock Text="  Files stay on your local network and expire automatically."
+                               Foreground="#5A55A8"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Row="2" Background="White" CornerRadius="14" BorderBrush="{StaticResource Line}" BorderThickness="1"
+                    Padding="22">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <DockPanel>
+                        <StackPanel>
+                            <TextBlock Text="Available files" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource Ink}"/>
+                            <TextBlock Text="Files shared with your room appear here." Foreground="{StaticResource Muted}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="220" VerticalAlignment="Center"
+                                 ToolTip="Search files" TextChanged="SearchBox_TextChanged"/>
+                    </DockPanel>
+                    <TextBlock Grid.Row="1" x:Name="EmptyStateText"
+                               Text="No files yet. Send one to get started."
+                               Foreground="{StaticResource Muted}" Margin="0,22,0,12"/>
+                    <ListView Grid.Row="2" x:Name="TransfersList" BorderThickness="0"
+                              SelectionChanged="TransfersList_SelectionChanged" Background="Transparent">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="125"/><ColumnDefinition Width="115"/><ColumnDefinition Width="105"/></Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Foreground="{StaticResource Ink}" FontSize="14"/>
+                                            <TextBlock Text="{Binding Note}" Foreground="{StaticResource Muted}" Margin="0,4,0,0"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding SenderName}" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding SizeText}" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Status}" Foreground="#635BFF" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

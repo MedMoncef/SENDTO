@@ -67,7 +67,8 @@ public sealed class LanTransport : IRoomTransport
         var metadata = new TransferMetadata(
             Guid.NewGuid().ToString("N"), request.FileName, request.Content.CanSeek ? request.Content.Length : -1,
             request.ContentType, request.SenderDeviceId, request.RecipientDeviceId,
-            DateTimeOffset.UtcNow, expires, roomId, Math.Max(1, request.RecipientCount));
+            DateTimeOffset.UtcNow, expires, roomId, Math.Max(1, request.RecipientCount),
+            request.Note, request.Visibility, request.AllowedDeviceIds);
         var encrypted = await FileEncryptor.EncryptAsync(request.Content, metadata, cancellationToken);
         var dto = new WireTransfer(metadata, FileEncryptor.ProtectFileKey(encrypted.Key, pin, roomId),
             encrypted.Nonce, encrypted.EncryptedMetadata, encrypted.Ciphertext);
@@ -99,7 +100,8 @@ public sealed class LanTransport : IRoomTransport
 
     private async Task<T?> RequestAsync<T>(HttpMethod method, string path, object? body, CancellationToken ct)
     {
-        if (_options.PeerUri is null) throw new InvalidOperationException("PeerUri is required for remote operations.");
+        if (_options.PeerUri is null)
+            return await HandleLocalAsync<T>(method, path, body, ct);
         using var request = new HttpRequestMessage(method, new Uri(_options.PeerUri, path));
         if (body is not null) request.Content = JsonContent.Create(body);
         using var response = await _client.SendAsync(request, ct);
@@ -107,6 +109,47 @@ public sealed class LanTransport : IRoomTransport
             throw new HttpRequestException($"LAN peer returned {(int)response.StatusCode} ({response.ReasonPhrase}).");
         return await response.Content.ReadFromJsonAsync<T>(cancellationToken: ct);
     }
+
+    private Task<T?> HandleLocalAsync<T>(HttpMethod method, string path, object? body, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var segments = path.Split('?', 2)[0].Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 4)
+            throw new InvalidOperationException("Invalid local transfer path.");
+        if (method == HttpMethod.Post && body is WireTransfer upload)
+        {
+            lock (_gate)
+                _transfers[upload.Metadata.TransferId] = new StoredTransfer(upload.Metadata, upload.ProtectedKey,
+                    upload.Nonce, upload.EncryptedMetadata, upload.Ciphertext);
+            return Task.FromResult<T?>(ConvertResult<T>(new TransferDescriptor(upload.Metadata,
+                new Uri("http://local/v1/rooms/" + upload.Metadata.RoomId + "/transfers/" + upload.Metadata.TransferId))));
+        }
+        if (method == HttpMethod.Get && segments.Length == 4)
+        {
+            lock (_gate)
+            {
+                var result = _transfers.Values
+                    .Where(t => t.Metadata.ExpiresAt is null || t.Metadata.ExpiresAt > DateTimeOffset.UtcNow)
+                    .Select(t => new TransferDescriptor(t.Metadata,
+                        new Uri("http://local/v1/rooms/" + t.Metadata.RoomId + "/transfers/" + t.Metadata.TransferId)))
+                    .ToList();
+                return Task.FromResult<T?>(ConvertResult<T>(result));
+            }
+        }
+        if (method == HttpMethod.Get && segments.Length == 5)
+        {
+            lock (_gate)
+            {
+                if (!_transfers.TryGetValue(segments[4], out var value))
+                    throw new FileNotFoundException("Transfer not found.");
+                return Task.FromResult<T?>(ConvertResult<T>(new WireTransfer(value.Metadata, value.ProtectedKey,
+                    value.Nonce, value.EncryptedMetadata, value.Ciphertext)));
+            }
+        }
+        throw new InvalidOperationException("Unsupported local transfer operation.");
+    }
+
+    private static T ConvertResult<T>(object value) => (T)value;
 
     private async Task ServeAsync(HttpListener listener, CancellationToken ct)
     {
