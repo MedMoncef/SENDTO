@@ -18,10 +18,12 @@ public partial class MainWindow : Window
     private readonly UserSettings settings;
     private IRoomTransport transport;
     private string destinationFolder;
+    private readonly bool startedFromExplorer;
 
     public MainWindow(string mode = "", string? path = null)
     {
         InitializeComponent();
+        startedFromExplorer = !string.IsNullOrWhiteSpace(mode);
         settings = SettingsStore.Load();
         destinationFolder = settings.DefaultSaveFolder;
         var roomId = Core.RoomKey.CreateRoomId(settings.RoomKey);
@@ -52,21 +54,20 @@ public partial class MainWindow : Window
         ModeDescription.Text = settings.DefaultTransport == "Cloud relay"
             ? "  Files use your configured backend and remain encrypted."
             : "  Files stay on your local network and expire automatically.";
-        if (mode.Equals("send", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(path))
-            _ = OpenSendAsync(path);
-        if (mode.Equals("receive", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(path))
-            destinationFolder = path;
     }
 
     public void HandleCommand(string mode, string? path)
     {
         if (mode.Equals("send", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(path))
-            _ = OpenSendAsync(path);
+        {
+            Hide();
+            _ = OpenSendAsync(path, startedFromExplorer);
+        }
         else if (mode.Equals("receive", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(path))
         {
             destinationFolder = path;
-            EmptyStateText.Text = $"Receive destination: {destinationFolder}";
-            Activate();
+            Hide();
+            _ = OpenReceiveOverlayAsync(startedFromExplorer);
         }
     }
 
@@ -103,18 +104,25 @@ public partial class MainWindow : Window
     {
         var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Choose a file to send" };
         if (dialog.ShowDialog() == true)
-            await OpenSendAsync(dialog.FileName);
+            await OpenSendAsync(dialog.FileName, false);
     }
 
-    private async Task OpenSendAsync(string path)
+    private async Task OpenSendAsync(string path, bool explorerMode)
     {
         if (!File.Exists(path))
             return;
-        var dialog = new SendDialog(path, settings, transport) { Owner = this };
+        var dialog = new SendDialog(path, settings, transport) { Owner = explorerMode ? null : this };
         if (dialog.ShowDialog() == true && dialog.Result is { } descriptor)
         {
             transfers.Add(new TransferRow(descriptor, path, settings.DisplayName));
             EmptyStateText.Text = "Shared securely. Select it to test receiving with the PIN you chose.";
+        }
+        if (explorerMode)
+            Close();
+        else
+        {
+            Show();
+            Activate();
         }
     }
 
@@ -125,6 +133,21 @@ public partial class MainWindow : Window
         {
             destinationFolder = dialog.SelectedPath;
             EmptyStateText.Text = $"Receive destination: {destinationFolder}";
+        }
+    }
+
+    private async Task OpenReceiveOverlayAsync(bool explorerMode)
+    {
+        var dialog = new ReceiveDialog(settings, transport, destinationFolder) { Owner = explorerMode ? null : this };
+        dialog.ShowDialog();
+        if (dialog.SelectedFolder is not null)
+            destinationFolder = dialog.SelectedFolder;
+        if (explorerMode)
+            Close();
+        else
+        {
+            Show();
+            Activate();
         }
     }
 

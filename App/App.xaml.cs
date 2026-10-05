@@ -11,6 +11,7 @@ namespace DropRoom;
 public partial class App : System.Windows.Application
 {
     private Mutex? instanceMutex;
+    private bool ownsInstanceMutex;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -26,15 +27,20 @@ public partial class App : System.Windows.Application
                 writer.WriteLine(string.Join("\t", e.Args.Select(arg => arg.Replace("\t", " "))));
                 writer.Flush();
             }
-            catch (TimeoutException) { }
+            catch (Exception) { }
+            instanceMutex.Dispose();
+            instanceMutex = null;
             Shutdown();
             return;
         }
+        ownsInstanceMutex = true;
         var mode = e.Args.Length > 0 ? e.Args[0] : string.Empty;
         var path = e.Args.Length > 1 ? e.Args[1] : null;
         var window = new MainWindow(mode, path);
         MainWindow = window;
         window.Show();
+        if (!string.IsNullOrWhiteSpace(mode))
+            window.HandleCommand(mode, path);
         _ = ListenForCommandsAsync(window);
     }
 
@@ -60,7 +66,8 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        instanceMutex?.ReleaseMutex();
+        if (ownsInstanceMutex)
+            instanceMutex?.ReleaseMutex();
         instanceMutex?.Dispose();
         base.OnExit(e);
     }

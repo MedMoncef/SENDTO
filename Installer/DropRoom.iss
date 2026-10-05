@@ -8,6 +8,7 @@ AppId={{C6E1B260-A2BE-4FD1-B1AE-2A6A3D4C5E10}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+SetupIconFile=..\App\Assets\DropRoom.ico
 DefaultDirName={autopf}\DropRoom
 DefaultGroupName=DropRoom
 OutputDir=.
@@ -35,4 +36,4 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""D
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""DropRoom LAN"""; Flags: runhidden
 
 [Icons]
-Name: "{autoprograms}\DropRoom"; Filename: "{app}\{#MyAppExeName}"
+Name: "{autoprograms}\DropRoom"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#MyAppExeName}"
