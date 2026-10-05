@@ -3,30 +3,22 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="DropRoom" Height="720" Width="1120" MinHeight="600" MinWidth="900"
         WindowStartupLocation="CenterScreen" Background="#F6F7FB">
-    <Window.Resources>
-        <SolidColorBrush x:Key="Ink" Color="#172033"/>
-        <SolidColorBrush x:Key="Muted" Color="#667085"/>
-        <SolidColorBrush x:Key="Line" Color="#E4E7EC"/>
-        <Style TargetType="Button">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Padding" Value="16,10"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="BorderBrush" Value="#D0D5DD"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,8"/>
-        </Style>
-    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
         <Border Grid.Column="0" Background="#171B2D">
             <Grid Margin="24">
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <StackPanel>
-                    <TextBlock Text="DropRoom" Foreground="White" FontSize="26" FontWeight="SemiBold"/>
-                    <TextBlock Text="Private file sharing" Foreground="#AAB1C5" Margin="0,4,0,0"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="40" Height="40" CornerRadius="13" Background="#635BFF" Margin="0,0,11,0">
+                            <TextBlock Text="D" Foreground="White" FontSize="24" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="DropRoom" Foreground="White" FontSize="23" FontWeight="SemiBold"/>
+                            <TextBlock Text="Private file sharing" Foreground="#AAB1C5" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Margin="0,48,0,0">
                     <Border Background="#2B3050" CornerRadius="9" Padding="12" Margin="0,0,0,10">

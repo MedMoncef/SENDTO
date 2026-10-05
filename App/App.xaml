@@ -3,6 +3,35 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:DropRoom">
     <Application.Resources>
-         
+        <SolidColorBrush x:Key="Ink" Color="#172033"/>
+        <SolidColorBrush x:Key="Muted" Color="#667085"/>
+        <SolidColorBrush x:Key="Line" Color="#E4E7EC"/>
+        <SolidColorBrush x:Key="Primary" Color="#635BFF"/>
+        <SolidColorBrush x:Key="Surface" Color="#FFFFFF"/>
+        <Style TargetType="Button">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderBrush" Value="#D0D5DD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="11,9"/>
+        </Style>
+        <Style TargetType="PasswordBox">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderBrush" Value="#D0D5DD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="11,9"/>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderBrush" Value="#D0D5DD"/>
+            <Setter Property="Padding" Value="9,7"/>
+        </Style>
     </Application.Resources>
 </Application>

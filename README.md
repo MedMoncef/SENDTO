@@ -12,6 +12,19 @@ dotnet build .\RoomTransfer.slnx
 dotnet publish .\App\App.csproj -c Release -r win-x64 --self-contained true
 ```
 
+The standalone executable is generated at:
+
+```text
+App\bin\Release\net10.0-windows\win-x64\publish\DropRoom.exe
+```
+
+You can launch that executable directly for a quick test. For Explorer
+integration, install the published build instead of copying only the EXE:
+compile `Installer\DropRoom.iss` with Inno Setup, then run the generated
+`Installer\DropRoom-Setup.exe` as administrator. After installation, right-click
+a file and choose **Show more options → Send with DropRoom...**, or right-click
+inside a folder and choose **Show more options → Grab from DropRoom...**.
+
 The application targets .NET 10 and uses WPF. The LAN transport keeps the same
 encrypted payload format that a future cloud transport can use.
 

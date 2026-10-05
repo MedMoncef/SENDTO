@@ -1,8 +1,8 @@
 <Window x:Class="DropRoom.SendDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Send to room" Width="560" Height="650" WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" Background="#F5F7FB">
+        Title="Send to room" Width="580" Height="700" MinHeight="560" WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize" Background="#F5F7FB">
     <Window.Resources>
         <Style TargetType="TextBox"><Setter Property="Padding" Value="11,8"/><Setter Property="BorderBrush" Value="#D0D5DD"/></Style>
         <Style TargetType="ComboBox"><Setter Property="Padding" Value="9,7"/></Style>
@@ -11,10 +11,19 @@
     <Grid Margin="28">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <StackPanel Margin="0,0,0,20">
-            <TextBlock Text="Send to room" FontSize="26" FontWeight="SemiBold" Foreground="#101828"/>
-            <TextBlock x:Name="FileSummary" Margin="0,5,0,0" Foreground="#667085"/>
+            <StackPanel Orientation="Horizontal">
+                <Border Width="38" Height="38" CornerRadius="12" Background="#635BFF" Margin="0,0,12,0">
+                    <TextBlock Text="D" Foreground="White" FontSize="22" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel>
+                    <TextBlock Text="Send to room" FontSize="26" FontWeight="SemiBold" Foreground="#101828"/>
+                    <TextBlock x:Name="FileSummary" Margin="0,3,0,0" Foreground="#667085"/>
+                </StackPanel>
+            </StackPanel>
         </StackPanel>
-        <StackPanel Grid.Row="1">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,0,10,18">
             <TextBlock Text="Display name" FontWeight="SemiBold"/>
             <TextBox x:Name="NameBox" Margin="0,7,0,15"/>
             <TextBlock Text="Note for recipients" FontWeight="SemiBold"/>
@@ -31,6 +40,7 @@
             <TextBlock Text="The file is encrypted before it leaves this device."
                        Foreground="#667085" TextWrapping="Wrap"/>
         </StackPanel>
+        </ScrollViewer>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Cancel" Click="Cancel_Click"/>
             <Button Content="Send securely" Background="#635BFF" Foreground="White" Click="Send_Click"/>
