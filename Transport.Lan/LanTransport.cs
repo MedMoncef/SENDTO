@@ -67,9 +67,10 @@ public sealed class LanTransport : IRoomTransport
         var metadata = new TransferMetadata(
             Guid.NewGuid().ToString("N"), request.FileName, request.Content.CanSeek ? request.Content.Length : -1,
             request.ContentType, request.SenderDeviceId, request.RecipientDeviceId,
-            DateTimeOffset.UtcNow, expires, roomId);
+            DateTimeOffset.UtcNow, expires, roomId, Math.Max(1, request.RecipientCount));
         var encrypted = await FileEncryptor.EncryptAsync(request.Content, metadata, cancellationToken);
-        var dto = new WireTransfer(metadata, encrypted.Key, encrypted.Nonce, encrypted.EncryptedMetadata, encrypted.Ciphertext);
+        var dto = new WireTransfer(metadata, FileEncryptor.ProtectFileKey(encrypted.Key, pin, roomId),
+            encrypted.Nonce, encrypted.EncryptedMetadata, encrypted.Ciphertext);
         return await RequestAsync<TransferDescriptor>(
             HttpMethod.Post, $"v1/rooms/{Uri.EscapeDataString(roomId)}/transfers?pin={Uri.EscapeDataString(pin)}",
             dto, cancellationToken) ?? throw new IOException("Peer returned no transfer descriptor.");
@@ -79,9 +80,10 @@ public sealed class LanTransport : IRoomTransport
         string roomId, string pin, string transferId, CancellationToken cancellationToken = default)
     {
         var dto = await RequestAsync<WireTransfer>(
-            HttpMethod.Get, $"v1/rooms/{Uri.EscapeDataString(roomId)}/transfers/{Uri.EscapeDataString(transferId)}?pin={Uri.EscapeDataString(pin)}",
+            HttpMethod.Get, $"v1/rooms/{Uri.EscapeDataString(roomId)}/transfers/{Uri.EscapeDataString(transferId)}?pin={Uri.EscapeDataString(pin)}&deviceId={Uri.EscapeDataString(_options.Device.DeviceId)}",
             null, cancellationToken) ?? throw new FileNotFoundException("Transfer not found.");
-        var encrypted = new EncryptedFile(dto.EncryptedMetadata, dto.Ciphertext, dto.Key, dto.Nonce);
+        var fileKey = FileEncryptor.UnprotectFileKey(dto.ProtectedKey, pin, roomId);
+        var encrypted = new EncryptedFile(dto.EncryptedMetadata, dto.Ciphertext, fileKey, dto.Nonce);
         var metadata = FileEncryptor.DecryptMetadata(encrypted, transferId);
         TransferAuthorizer.Authorize(_options.Room, pin, metadata, _options.Device.DeviceId);
         return new ReceivedTransfer(metadata, new MemoryStream(FileEncryptor.Decrypt(encrypted, transferId), writable: false));
@@ -140,12 +142,35 @@ public sealed class LanTransport : IRoomTransport
                 {
                     var dto = await JsonSerializer.DeserializeAsync<WireTransfer>(context.Request.InputStream);
                     if (dto is null) throw new InvalidDataException();
-                    lock (_gate) _transfers[dto.Metadata.TransferId] = new StoredTransfer(dto.Metadata, dto.Key, dto.Nonce, dto.EncryptedMetadata, dto.Ciphertext);
+                    lock (_gate) _transfers[dto.Metadata.TransferId] = new StoredTransfer(dto.Metadata, dto.ProtectedKey,
+                        dto.Nonce, dto.EncryptedMetadata, dto.Ciphertext);
                     await WriteJsonAsync(context, new TransferDescriptor(dto.Metadata, new Uri(LocalUri!, $"v1/rooms/{roomId}/transfers/{dto.Metadata.TransferId}"))); return;
                 }
                 if (path.Length == 5 && context.Request.HttpMethod == "GET")
                 {
-                    lock (_gate) if (_transfers.TryGetValue(path[4], out var value)) { WriteJsonAsync(context, value).GetAwaiter().GetResult(); return; }
+                    lock (_gate) if (_transfers.TryGetValue(path[4], out var value))
+                    {
+                        var deviceId = context.Request.QueryString["deviceId"] ?? "unknown";
+                        var pin = context.Request.QueryString["pin"] ?? "";
+                        if (value.Attempts.TryGetValue(deviceId, out var attempts) &&
+                            attempts >= _options.Room.MaxPinAttempts)
+                            throw new UnauthorizedAccessException("PIN attempts exhausted for this recipient.");
+                        try
+                        {
+                            TransferAuthorizer.Authorize(_options.Room, pin, value.Metadata, deviceId);
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            value.Attempts[deviceId] = attempts + 1;
+                            throw;
+                        }
+                        value.RemainingPickups--;
+                        var response = new WireTransfer(value.Metadata, value.ProtectedKey, value.Nonce,
+                            value.EncryptedMetadata, value.Ciphertext);
+                        if (value.RemainingPickups <= 0)
+                            _transfers.Remove(path[4]);
+                        WriteJsonAsync(context, response).GetAwaiter().GetResult(); return;
+                    }
                     context.Response.StatusCode = 404; return;
                 }
             }
@@ -160,7 +185,7 @@ public sealed class LanTransport : IRoomTransport
     {
         var pin = context.Request.QueryString["pin"] ?? "";
         if (!string.Equals(roomId, _options.Room.RoomId, StringComparison.Ordinal)) throw new UnauthorizedAccessException();
-        TransferAuthorizer.Authorize(_options.Room, pin, new TransferMetadata("", "", 0, "", "", null, DateTimeOffset.UtcNow, _options.Room.ExpiresAt, roomId));
+        TransferAuthorizer.AuthorizeRoomPin(_options.Room, pin, roomId);
     }
 
     private static async Task WriteJsonAsync(HttpListenerContext c, object value)
@@ -175,6 +200,27 @@ public sealed class LanTransport : IRoomTransport
         tcp.Start(); return ((IPEndPoint)tcp.LocalEndpoint).Port;
     }
 
-    private sealed record StoredTransfer(TransferMetadata Metadata, byte[] Key, byte[] Nonce, byte[] EncryptedMetadata, byte[] Ciphertext);
-    private sealed record WireTransfer(TransferMetadata Metadata, byte[] Key, byte[] Nonce, byte[] EncryptedMetadata, byte[] Ciphertext);
+    private sealed class StoredTransfer
+    {
+        public StoredTransfer(TransferMetadata metadata, byte[] protectedKey, byte[] nonce,
+            byte[] encryptedMetadata, byte[] ciphertext)
+        {
+            Metadata = metadata;
+            ProtectedKey = protectedKey;
+            Nonce = nonce;
+            EncryptedMetadata = encryptedMetadata;
+            Ciphertext = ciphertext;
+            RemainingPickups = metadata.RecipientCount;
+        }
+
+        public TransferMetadata Metadata { get; }
+        public byte[] ProtectedKey { get; }
+        public byte[] Nonce { get; }
+        public byte[] EncryptedMetadata { get; }
+        public byte[] Ciphertext { get; }
+        public int RemainingPickups { get; set; }
+        public Dictionary<string, int> Attempts { get; } = new(StringComparer.Ordinal);
+    }
+    private sealed record WireTransfer(TransferMetadata Metadata, byte[] ProtectedKey, byte[] Nonce,
+        byte[] EncryptedMetadata, byte[] Ciphertext);
 }

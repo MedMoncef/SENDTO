@@ -5,7 +5,8 @@ public sealed record RoomSettings(
     string Name,
     string Pin,
     DateTimeOffset? ExpiresAt = null,
-    bool RequireRecipient = false);
+    bool RequireRecipient = false,
+    int MaxPinAttempts = 5);
 
 public sealed record DeviceSettings(
     string DeviceId,
@@ -26,7 +27,8 @@ public sealed record TransferMetadata(
     string? RecipientDeviceId,
     DateTimeOffset CreatedAt,
     DateTimeOffset? ExpiresAt,
-    string RoomId);
+    string RoomId,
+    int RecipientCount = 1);
 
 public sealed record TransferDescriptor(
     TransferMetadata Metadata,
@@ -38,7 +40,8 @@ public sealed record SendRequest(
     string ContentType,
     string SenderDeviceId,
     string? RecipientDeviceId = null,
-    DateTimeOffset? ExpiresAt = null);
+    DateTimeOffset? ExpiresAt = null,
+    int RecipientCount = 1);
 
 public sealed record ReceivedTransfer(TransferMetadata Metadata, Stream Content);
 

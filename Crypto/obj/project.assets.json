@@ -98,6 +98,16 @@
             "related": ".xml"
           }
         }
+      },
+      "Core/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Core.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Core.dll": {}
+        }
       }
     }
   },
@@ -159,10 +169,16 @@
         "sodium.core.1.4.1.nupkg.sha512",
         "sodium.core.nuspec"
       ]
+    },
+    "Core/1.0.0": {
+      "type": "project",
+      "path": "../Core/Core.csproj",
+      "msbuildProject": "../Core/Core.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "Core >= 1.0.0",
       "Sodium.Core >= 1.4.1"
     ]
   },
@@ -191,7 +207,11 @@
         "net10.0": {
           "framework": "net10.0",
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\lenovo\\Desktop\\SENDTO\\RoomTransfer\\Core\\Core.csproj": {
+              "projectPath": "C:\\Users\\lenovo\\Desktop\\SENDTO\\RoomTransfer\\Core\\Core.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

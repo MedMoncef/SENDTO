@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "ISr9k2zaqLw=",
+  "dgSpecHash": "qSlJOMW+s+g=",
   "success": true,
   "projectFilePath": "C:\\Users\\lenovo\\Desktop\\SENDTO\\RoomTransfer\\Transport.Cloud\\Transport.Cloud.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\lenovo\\.nuget\\packages\\libsodium\\1.0.22\\libsodium.1.0.22.nupkg.sha512",
+    "C:\\Users\\lenovo\\.nuget\\packages\\sodium.core\\1.4.1\\sodium.core.1.4.1.nupkg.sha512"
+  ],
   "logs": []
 }

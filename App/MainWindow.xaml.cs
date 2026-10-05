@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
+using System.Windows.Data;
 using System.Windows.Controls;
 using System.Windows;
 
@@ -11,11 +13,14 @@ namespace DropRoom;
 public partial class MainWindow : Window
 {
     private readonly ObservableCollection<TransferRow> transfers = new();
+    private readonly ICollectionView transferView;
 
     public MainWindow(string mode = "", string? path = null)
     {
         InitializeComponent();
         TransfersList.ItemsSource = transfers;
+        transferView = new ListCollectionView(transfers);
+        transferView.Filter = item => item is TransferRow row && row.IsVisible;
         RoomStatusText.Text = "Ready. Configure a room key in Settings to start sharing.";
         if (mode.Equals("send", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(path))
             StageFile(path);
@@ -57,6 +62,7 @@ public partial class MainWindow : Window
             if (item is TransferRow row)
                 row.IsVisible = string.IsNullOrWhiteSpace(filter) ||
                     row.DisplayName.Contains(filter, StringComparison.OrdinalIgnoreCase);
+        transferView.Refresh();
     }
 
     private void TransfersList_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -58,7 +58,26 @@ public static class FileEncryptor
         ArgumentException.ThrowIfNullOrEmpty(pin);
         ArgumentException.ThrowIfNullOrEmpty(roomId);
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(pin));
-        return hmac.ComputeHash(Encoding.UTF8.GetBytes("room:" + roomId)).Concat(salt).Take(32).ToArray();
+        return hmac.ComputeHash(Encoding.UTF8.GetBytes("DropRoom room:" + roomId)
+            .Concat(salt).ToArray());
+    }
+
+    public static byte[] ProtectFileKey(byte[] fileKey, string roomPin, string roomId)
+    {
+        var roomKey = DeriveRoomKey(roomPin, roomId, Array.Empty<byte>());
+        var nonce = SecretAeadXChaCha20Poly1305.GenerateNonce();
+        var protectedKey = SecretAeadXChaCha20Poly1305.Encrypt(fileKey,
+            Encoding.UTF8.GetBytes(roomId), nonce, roomKey);
+        return nonce.Concat(protectedKey).ToArray();
+    }
+
+    public static byte[] UnprotectFileKey(byte[] protectedKey, string roomPin, string roomId)
+    {
+        if (protectedKey.Length <= 24)
+            throw new CryptographicException("Invalid protected file key.");
+        var roomKey = DeriveRoomKey(roomPin, roomId, Array.Empty<byte>());
+        return SecretAeadXChaCha20Poly1305.Decrypt(protectedKey[24..],
+            Encoding.UTF8.GetBytes(roomId), protectedKey[..24], roomKey);
     }
 
     private static async Task<byte[]> ReadAllAsync(Stream stream, CancellationToken ct)
@@ -71,14 +90,21 @@ public static class FileEncryptor
 
 public static class TransferAuthorizer
 {
-    public static void Authorize(RoomSettings room, string pin, TransferMetadata metadata, string? requestingDeviceId = null)
+    public static void AuthorizeRoomPin(RoomSettings room, string pin, string roomId)
     {
         if (!CryptographicOperations.FixedTimeEquals(
                 Encoding.UTF8.GetBytes(room.Pin), Encoding.UTF8.GetBytes(pin)))
             throw new UnauthorizedAccessException("Invalid room PIN.");
-        if (!string.Equals(room.RoomId, metadata.RoomId, StringComparison.Ordinal))
+        if (!string.Equals(room.RoomId, roomId, StringComparison.Ordinal))
             throw new UnauthorizedAccessException("Transfer belongs to another room.");
-        if (room.ExpiresAt <= DateTimeOffset.UtcNow || metadata.ExpiresAt <= DateTimeOffset.UtcNow)
+        if (room.ExpiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow)
+            throw new UnauthorizedAccessException("Room has expired.");
+    }
+
+    public static void Authorize(RoomSettings room, string pin, TransferMetadata metadata, string? requestingDeviceId = null)
+    {
+        AuthorizeRoomPin(room, pin, metadata.RoomId);
+        if (metadata.ExpiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow)
             throw new UnauthorizedAccessException("Room or transfer has expired.");
         if (room.RequireRecipient && !string.Equals(metadata.RecipientDeviceId, requestingDeviceId, StringComparison.Ordinal))
             throw new UnauthorizedAccessException("Transfer is addressed to another device.");
