@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
     <PackageReference Include="Sodium.Core" Version="1.4.1" />
   </ItemGroup>
 

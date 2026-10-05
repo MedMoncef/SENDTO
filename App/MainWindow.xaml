@@ -1,12 +1,81 @@
-﻿<Window x:Class="App.MainWindow"
+<Window x:Class="DropRoom.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:App"
+        xmlns:local="clr-namespace:DropRoom"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="DropRoom" Height="620" Width="980"
+        MinHeight="520" MinWidth="820"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FB">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
+        <DockPanel Grid.Row="0" Margin="0,0,0,24">
+            <StackPanel>
+                <TextBlock Text="DropRoom" FontSize="30" FontWeight="SemiBold" Foreground="#172033"/>
+                <TextBlock Text="A private shared inbox for your room" Margin="0,4,0,0"
+                           Foreground="#667085" FontSize="14"/>
+            </StackPanel>
+            <Button DockPanel.Dock="Right" Content="Settings" Padding="18,9"
+                    Click="Settings_Click" VerticalAlignment="Center"/>
+        </DockPanel>
+
+        <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="18" Margin="0,0,0,18"
+                BorderBrush="#E4E7EC" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Room status" FontWeight="SemiBold" Foreground="#172033"/>
+                    <TextBlock x:Name="RoomStatusText" Text="Loading room…" Margin="0,5,0,0"
+                               Foreground="#667085"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Receive here…" Padding="16,9" Margin="12,0,8,0"
+                        Click="Receive_Click"/>
+                <Button Grid.Column="2" Content="Send a file…" Padding="16,9"
+                        Click="Send_Click"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2" Background="White" CornerRadius="10" Padding="18"
+                BorderBrush="#E4E7EC" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <DockPanel Grid.Row="0">
+                    <TextBlock Text="Available files" FontSize="18" FontWeight="SemiBold"
+                               Foreground="#172033"/>
+                    <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="230" Padding="8,6"
+                             TextChanged="SearchBox_TextChanged" ToolTip="Filter files"/>
+                </DockPanel>
+                <TextBlock Grid.Row="1" x:Name="EmptyStateText"
+                           Text="No one else in this room is visible on this network."
+                           Foreground="#667085" Margin="0,14,0,12"/>
+                <ListView Grid.Row="2" x:Name="TransfersList" BorderThickness="0"
+                          SelectionChanged="TransfersList_SelectionChanged">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="File" DisplayMemberBinding="{Binding DisplayName}" Width="250"/>
+                            <GridViewColumn Header="From" DisplayMemberBinding="{Binding SenderName}" Width="140"/>
+                            <GridViewColumn Header="Size" DisplayMemberBinding="{Binding SizeText}" Width="100"/>
+                            <GridViewColumn Header="Expires" DisplayMemberBinding="{Binding ExpiresText}" Width="140"/>
+                            <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Status}" Width="120"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
