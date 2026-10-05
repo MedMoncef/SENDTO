@@ -21,7 +21,7 @@ public partial class SendDialog : Window
         transport = roomTransport;
         var file = new FileInfo(path);
         FileSummary.Text = $"{file.Name}  •  {FormatSize(file.Length)}";
-        NameBox.Text = Path.GetFileNameWithoutExtension(path);
+        NameBox.Text = file.Name;
         PinBox.Focus();
     }
 
@@ -52,9 +52,10 @@ public partial class SendDialog : Window
             var roomId = Core.RoomKey.CreateRoomId(settings.RoomKey);
             var room = new RoomSettings(roomId, "My room", pin,
                 DateTimeOffset.UtcNow.AddHours(settings.ExpiryHours));
+            var fileName = PreserveSourceExtension(NameBox.Text, info.Extension);
             await using var stream = File.OpenRead(filePath);
             Result = await transport.SendAsync(roomId, pin, new SendRequest(
-                NameBox.Text.Trim(), stream, "application/octet-stream", settings.DeviceId,
+                fileName, stream, "application/octet-stream", settings.DeviceId,
                 ExpiresAt: DateTimeOffset.UtcNow.AddHours(settings.ExpiryHours),
                 RecipientCount: recipients, Note: NoteBox.Text.Trim(),
                 Visibility: (VisibilityBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Anyone in the room"));
@@ -68,6 +69,18 @@ public partial class SendDialog : Window
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
+    private static string PreserveSourceExtension(string name, string sourceExtension)
+    {
+        name = Path.GetFileName(name.Trim());
+        if (string.IsNullOrWhiteSpace(name))
+            throw new InvalidOperationException("Enter a display name for the file.");
+
+        var baseName = Path.GetFileNameWithoutExtension(name);
+        return string.IsNullOrEmpty(sourceExtension) || name.EndsWith(sourceExtension, StringComparison.OrdinalIgnoreCase)
+            ? name
+            : baseName + sourceExtension;
+    }
+
     private static string FormatSize(long bytes) => bytes < 1024 * 1024
         ? $"{bytes / 1024d:0.0} KB" : $"{bytes / (1024d * 1024):0.0} MB";
 }

@@ -32,7 +32,17 @@ public partial class MainWindow : Window
             ? new CloudTransport(new CloudTransportOptions { Room = room, Device = device, BackendUrl = backend })
             : new LanTransport(new LanTransportOptions { Room = room, Device = device, Port = 41872 });
         if (transport is LanTransport lan)
-            _ = lan.StartAsync();
+        {
+            try
+            {
+                lan.StartAsync().GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Local network mode could not start.\n\n{ex.Message}",
+                    "DropRoom startup problem", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
         TransfersList.ItemsSource = transfers;
         transferView = new ListCollectionView(transfers);
         transferView.Filter = item => item is TransferRow row && row.IsVisible;

@@ -36,22 +36,25 @@ public sealed class LanTransport : IRoomTransport
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
         if (_listener is not null) return Task.CompletedTask;
-        _listener = new HttpListener();
         var port = _options.Port == 0 ? GetFreePort() : _options.Port;
-        LocalUri = new Uri($"http://+:{port}/");
-        _listener.Prefixes.Add(LocalUri.ToString());
+        var listener = new HttpListener();
+        var advertisedUri = new Uri($"http://{GetLocalAddress()}:{port}/");
+        listener.Prefixes.Add($"http://+:{port}/");
         try
         {
-            _listener.Start();
+            listener.Start();
         }
         catch (HttpListenerException)
         {
-            _listener.Prefixes.Clear();
-            LocalUri = new Uri($"http://127.0.0.1:{port}/");
-            _listener.Prefixes.Add(LocalUri.ToString());
-            _listener.Start();
+            listener.Close();
+            listener = new HttpListener();
+            advertisedUri = new Uri($"http://127.0.0.1:{port}/");
+            listener.Prefixes.Add(advertisedUri.ToString());
+            listener.Start();
         }
-        _serverTask = Task.Run(() => ServeAsync(_listener, cancellationToken), cancellationToken);
+        LocalUri = advertisedUri;
+        _listener = listener;
+        _serverTask = Task.Run(() => ServeAsync(listener, cancellationToken), cancellationToken);
         return Task.CompletedTask;
     }
 
@@ -98,7 +101,7 @@ public sealed class LanTransport : IRoomTransport
         var fileKey = FileEncryptor.UnprotectFileKey(dto.ProtectedKey, pin, roomId);
         var encrypted = new EncryptedFile(dto.EncryptedMetadata, dto.Ciphertext, fileKey, dto.Nonce);
         var metadata = FileEncryptor.DecryptMetadata(encrypted, transferId);
-        TransferAuthorizer.Authorize(_options.Room, pin, metadata, _options.Device.DeviceId);
+        AuthorizeTransferMetadata(metadata, roomId);
         return new ReceivedTransfer(metadata, new MemoryStream(FileEncryptor.Decrypt(encrypted, transferId), writable: false));
     }
 
@@ -111,8 +114,10 @@ public sealed class LanTransport : IRoomTransport
 
     public async ValueTask DisposeAsync()
     {
-        _listener?.Stop();
-        _listener?.Close();
+        var listener = _listener;
+        _listener = null;
+        listener?.Stop();
+        listener?.Close();
         if (_serverTask is not null) try { await _serverTask; } catch (OperationCanceledException) { }
         _client.Dispose();
     }
@@ -251,7 +256,8 @@ public sealed class LanTransport : IRoomTransport
                             throw new UnauthorizedAccessException("PIN attempts exhausted for this recipient.");
                         try
                         {
-                            TransferAuthorizer.Authorize(_options.Room, pin, value.Metadata, deviceId);
+                            if (value.Metadata.ExpiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow)
+                                throw new UnauthorizedAccessException("Transfer has expired.");
                         }
                         catch (UnauthorizedAccessException)
                         {
@@ -277,9 +283,17 @@ public sealed class LanTransport : IRoomTransport
 
     private void AuthorizeRequest(HttpListenerContext context, string roomId)
     {
-        var pin = context.Request.QueryString["pin"] ?? "";
         if (!string.Equals(roomId, _options.Room.RoomId, StringComparison.Ordinal)) throw new UnauthorizedAccessException();
-        TransferAuthorizer.AuthorizeRoomPin(_options.Room, pin, roomId);
+        if (_options.Room.ExpiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow)
+            throw new UnauthorizedAccessException("Room has expired.");
+    }
+
+    private void AuthorizeTransferMetadata(TransferMetadata metadata, string roomId)
+    {
+        if (!string.Equals(metadata.RoomId, roomId, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("Transfer belongs to another room.");
+        if (metadata.ExpiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow)
+            throw new UnauthorizedAccessException("Transfer has expired.");
     }
 
     private static async Task WriteJsonAsync(HttpListenerContext c, object value)
@@ -292,6 +306,15 @@ public sealed class LanTransport : IRoomTransport
     {
         using var tcp = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
         tcp.Start(); return ((IPEndPoint)tcp.LocalEndpoint).Port;
+    }
+
+    private static string GetLocalAddress()
+    {
+        var host = Dns.GetHostEntry(Dns.GetHostName());
+        return host.AddressList
+            .FirstOrDefault(address => address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
+                                       !IPAddress.IsLoopback(address))
+            ?.ToString() ?? "127.0.0.1";
     }
 
     private sealed class StoredTransfer
