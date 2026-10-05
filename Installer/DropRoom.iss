@@ -14,19 +14,25 @@ OutputDir=.
 OutputBaseFilename=DropRoom-Setup
 Compression=lzma
 SolidCompression=yes
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64
 
 [Files]
-Source: "..\App\bin\Release\net10.0-windows\win-x64\publish\DropRoom.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\App\bin\Release\net10.0-windows\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Registry]
-Root: HKCU; Subkey: "Software\Classes\*\shell\SendToRoom"; ValueType: string; ValueName: ""; ValueData: "Send to room..."; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\*\shell\SendToRoom\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" send ""%1"""
-Root: HKCU; Subkey: "Software\Classes\Directory\Background\shell\ReceiveHere"; ValueType: string; ValueName: ""; ValueData: "Receive here..."; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\Directory\Background\shell\ReceiveHere\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" receive ""%V"""
-Root: HKCU; Subkey: "Software\Classes\Directory\shell\ReceiveHere"; ValueType: string; ValueName: ""; ValueData: "Receive here..."; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\Directory\shell\ReceiveHere\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" receive ""%1"""
+Root: HKCU; Subkey: "Software\Classes\*\shell\SendToDropRoom"; ValueType: string; ValueName: ""; ValueData: "Send with DropRoom..."; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\*\shell\SendToDropRoom\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" send ""%1"""
+Root: HKCU; Subkey: "Software\Classes\Directory\Background\shell\ReceiveFromDropRoom"; ValueType: string; ValueName: ""; ValueData: "Grab from DropRoom..."; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Directory\Background\shell\ReceiveFromDropRoom\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" receive ""%V"""
+Root: HKCU; Subkey: "Software\Classes\Directory\shell\ReceiveFromDropRoom"; ValueType: string; ValueName: ""; ValueData: "Grab from DropRoom..."; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Directory\shell\ReceiveFromDropRoom\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" receive ""%1"""
+
+[Run]
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""DropRoom LAN"" dir=in action=allow protocol=TCP localport=41872 profile=private"; Flags: runhidden
+
+[UninstallRun]
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""DropRoom LAN"""; Flags: runhidden
 
 [Icons]
 Name: "{autoprograms}\DropRoom"; Filename: "{app}\{#MyAppExeName}"

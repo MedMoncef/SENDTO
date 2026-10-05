@@ -15,11 +15,37 @@ dotnet publish .\App\App.csproj -c Release -r win-x64 --self-contained true
 The application targets .NET 10 and uses WPF. The LAN transport keeps the same
 encrypted payload format that a future cloud transport can use.
 
+## Delivery modes
+
+The app deliberately names the two routes explicitly:
+
+- **Local network (LAN):** direct transfer between PCs on the same reachable
+  network. Files are hosted by the sender and expire locally.
+- **Cloud relay:** the client uploads encrypted payloads to an HTTP backend
+  (normally a Cloudflare Worker backed by R2/D1). The client never receives or
+  stores database credentials.
+
+Configure **Settings → Cloud backend URL** with the base URL of your deployed
+Worker/API, for example `https://files.example.com/`, then choose **Cloud
+relay** as the default delivery. This project contains the typed client in
+`Transport.Cloud`; it does not include a hosted Worker or database deployment.
+The backend must implement the documented `/v1/rooms/{roomId}/transfers`
+endpoints and enforce quotas, PIN attempts, access lists, and expiry.
+
 ## Explorer integration
 
-Build the app and compile `Installer\DropRoom.iss` with Inno Setup. The installer
-registers the per-user `Send to room...` and `Receive here...` verbs, so no
+Publish the app first, then compile `Installer\DropRoom.iss` with Inno Setup.
+The installer registers the per-user **Send with DropRoom...** and **Grab from
+DropRoom...** verbs, so no
 administrator access is required.
+
+On Windows 11, legacy verbs are under **Show more options**. The installer
+registers both empty-folder background receive and folder receive commands.
+The app name is explicitly `DropRoom.exe`, and the installer includes the full
+self-contained publish directory rather than only the launcher.
+The installer requests elevation because it installs under Program Files and
+adds the LAN firewall rule; the Explorer verbs themselves are still written to
+HKCU.
 
 ## Security model
 
@@ -30,5 +56,8 @@ administrator access is required.
   enforced by the sender in LAN mode.
 - A 50 MB file cap and short default expiry reduce accidental abuse.
 
-The current UI is intentionally focused on the MVP workflow. Cloud relay support,
-tray integration, and delayed-rendered Explorer drag-out are subsequent additions.
+Tray integration, multicast discovery, access-request polish, and delayed-rendered
+Explorer drag-out remain subsequent additions. The current LAN fallback binds
+to loopback if Windows refuses the non-loopback listener; in that case the
+installer/firewall and network policy must be corrected before cross-PC LAN
+sharing is possible.

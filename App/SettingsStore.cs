@@ -12,6 +12,8 @@ public sealed class UserSettings
     public int ExpiryHours { get; set; } = 1;
     public string DefaultSaveFolder { get; set; } =
         Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+    public string BackendUrl { get; set; } = "";
+    public string DefaultTransport { get; set; } = "Local network";
 }
 
 internal static class SettingsStore

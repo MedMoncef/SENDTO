@@ -2,7 +2,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using Core;
-using Transport.Lan;
 using MessageBox = System.Windows.MessageBox;
 
 namespace DropRoom;
@@ -11,10 +10,10 @@ public partial class SendDialog : Window
 {
     private readonly string filePath;
     private readonly UserSettings settings;
-    private readonly LanTransport transport;
+    private readonly IRoomTransport transport;
     public TransferDescriptor? Result { get; private set; }
 
-    public SendDialog(string path, UserSettings userSettings, LanTransport roomTransport)
+    public SendDialog(string path, UserSettings userSettings, IRoomTransport roomTransport)
     {
         InitializeComponent();
         filePath = path;

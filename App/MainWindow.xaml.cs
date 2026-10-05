@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using Core;
 using Transport.Lan;
+using Transport.Cloud;
 using MessageBox = System.Windows.MessageBox;
 
 namespace DropRoom;
@@ -15,7 +16,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<TransferRow> transfers = new();
     private readonly ICollectionView transferView;
     private readonly UserSettings settings;
-    private readonly LanTransport transport;
+    private IRoomTransport transport;
     private string destinationFolder;
 
     public MainWindow(string mode = "", string? path = null)
@@ -24,20 +25,39 @@ public partial class MainWindow : Window
         settings = SettingsStore.Load();
         destinationFolder = settings.DefaultSaveFolder;
         var roomId = Core.RoomKey.CreateRoomId(settings.RoomKey);
-        transport = new LanTransport(new LanTransportOptions
-        {
-            Room = new RoomSettings(roomId, "My room", "local"),
-            Device = new DeviceSettings(settings.DeviceId, settings.DisplayName, roomId)
-        });
+        var device = new DeviceSettings(settings.DeviceId, settings.DisplayName, roomId);
+        var room = new RoomSettings(roomId, "My room", "local");
+        transport = settings.DefaultTransport == "Cloud relay" &&
+            Uri.TryCreate(settings.BackendUrl, UriKind.Absolute, out var backend)
+            ? new CloudTransport(new CloudTransportOptions { Room = room, Device = device, BackendUrl = backend })
+            : new LanTransport(new LanTransportOptions { Room = room, Device = device, Port = 41872 });
+        if (transport is LanTransport lan)
+            _ = lan.StartAsync();
         TransfersList.ItemsSource = transfers;
         transferView = new ListCollectionView(transfers);
         transferView.Filter = item => item is TransferRow row && row.IsVisible;
         TransfersList.ItemsSource = transferView;
-        RoomStatusText.Text = $"{settings.DisplayName}  •  room {roomId[..8]}  •  LAN ready";
+        RoomStatusText.Text = $"{settings.DisplayName}  •  room {roomId[..8]}  •  {settings.DefaultTransport}";
+        ModeText.Text = settings.DefaultTransport;
+        ModeDescription.Text = settings.DefaultTransport == "Cloud relay"
+            ? "  Files use your configured backend and remain encrypted."
+            : "  Files stay on your local network and expire automatically.";
         if (mode.Equals("send", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(path))
             _ = OpenSendAsync(path);
         if (mode.Equals("receive", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(path))
             destinationFolder = path;
+    }
+
+    public void HandleCommand(string mode, string? path)
+    {
+        if (mode.Equals("send", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(path))
+            _ = OpenSendAsync(path);
+        else if (mode.Equals("receive", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(path))
+        {
+            destinationFolder = path;
+            EmptyStateText.Text = $"Receive destination: {destinationFolder}";
+            Activate();
+        }
     }
 
     private void Settings_Click(object sender, RoutedEventArgs e)
@@ -45,9 +65,28 @@ public partial class MainWindow : Window
         var dialog = new SettingsWindow(settings) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
+            _ = RecreateTransportAsync();
             destinationFolder = settings.DefaultSaveFolder;
-            RoomStatusText.Text = $"{settings.DisplayName}  •  room {Core.RoomKey.CreateRoomId(settings.RoomKey)[..8]}  •  LAN ready";
+            RoomStatusText.Text = $"{settings.DisplayName}  •  room {Core.RoomKey.CreateRoomId(settings.RoomKey)[..8]}  •  {settings.DefaultTransport}";
+            ModeText.Text = settings.DefaultTransport;
+            ModeDescription.Text = settings.DefaultTransport == "Cloud relay"
+                ? "  Files use your configured backend and remain encrypted."
+                : "  Files stay on your local network and expire automatically.";
         }
+    }
+
+    private async Task RecreateTransportAsync()
+    {
+        await transport.DisposeAsync();
+        var roomId = Core.RoomKey.CreateRoomId(settings.RoomKey);
+        var room = new RoomSettings(roomId, "My room", "local");
+        var device = new DeviceSettings(settings.DeviceId, settings.DisplayName, roomId);
+        transport = settings.DefaultTransport == "Cloud relay" &&
+            Uri.TryCreate(settings.BackendUrl, UriKind.Absolute, out var backend)
+            ? new CloudTransport(new CloudTransportOptions { Room = room, Device = device, BackendUrl = backend })
+            : new LanTransport(new LanTransportOptions { Room = room, Device = device, Port = 41872 });
+        if (transport is LanTransport lan)
+            await lan.StartAsync();
     }
 
     private async void Send_Click(object sender, RoutedEventArgs e)

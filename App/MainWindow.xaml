@@ -61,8 +61,8 @@
             <Border Grid.Row="1" Background="#EDEBFF" CornerRadius="12" Padding="16" Margin="0,0,0,20">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="●" Foreground="#635BFF" FontSize="18" Margin="0,0,10,0"/>
-                    <TextBlock Text="LAN mode is active" Foreground="#423B9A" FontWeight="SemiBold"/>
-                    <TextBlock Text="  Files stay on your local network and expire automatically."
+                    <TextBlock x:Name="ModeText" Text="Local network (LAN)" Foreground="#423B9A" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="ModeDescription" Text="  Files stay on your local network and expire automatically."
                                Foreground="#5A55A8"/>
                 </StackPanel>
             </Border>
@@ -87,7 +87,7 @@
                             <DataTemplate>
                                 <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,14">
                                     <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="125"/><ColumnDefinition Width="115"/><ColumnDefinition Width="105"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="125"/><ColumnDefinition Width="90"/><ColumnDefinition Width="110"/><ColumnDefinition Width="105"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
                                         <StackPanel>
                                             <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Foreground="{StaticResource Ink}" FontSize="14"/>
                                             <TextBlock Text="{Binding Note}" Foreground="{StaticResource Muted}" Margin="0,4,0,0"
@@ -95,8 +95,9 @@
                                         </StackPanel>
                                         <TextBlock Grid.Column="1" Text="{Binding SenderName}" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="2" Text="{Binding SizeText}" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding Status}" Foreground="#635BFF" VerticalAlignment="Center"/>
-                                        <Button Grid.Column="4" Content="Delete" Tag="{Binding}" Padding="8,6"
+                                        <TextBlock Grid.Column="3" Text="{Binding ExpiresText}" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding Status}" Foreground="#635BFF" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="5" Content="Delete" Tag="{Binding}" Padding="8,6"
                                                 Background="#FFF1F3" Foreground="#B42318"
                                                 Click="DeleteTransfer_Click"/>
                                     </Grid>

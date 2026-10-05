@@ -15,6 +15,8 @@ public partial class SettingsWindow : Window
         RoomKeyBox.Text = settings.RoomKey;
         SaveFolderBox.Text = settings.DefaultSaveFolder;
         ExpiryBox.Text = settings.ExpiryHours.ToString();
+        BackendUrlBox.Text = settings.BackendUrl;
+        TransportBox.SelectedIndex = settings.DefaultTransport == "Cloud relay" ? 1 : 0;
     }
 
     private void CreateRoom_Click(object sender, RoutedEventArgs e) => RoomKeyBox.Text = RoomKeyGenerator.Generate();
@@ -55,6 +57,17 @@ public partial class SettingsWindow : Window
         settings.RoomKey = RoomKeyBox.Text.Trim();
         settings.DefaultSaveFolder = SaveFolderBox.Text.Trim();
         settings.ExpiryHours = hours;
+        settings.BackendUrl = BackendUrlBox.Text.Trim().TrimEnd('/');
+        settings.DefaultTransport = (TransportBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString()
+            ?? "Local network (LAN)";
+        if (settings.DefaultTransport == "Cloud relay" &&
+            (!Uri.TryCreate(settings.BackendUrl, UriKind.Absolute, out var backend) ||
+             backend.Scheme is not ("http" or "https")))
+        {
+            MessageBox.Show("Enter a valid http:// or https:// cloud backend URL.", "Settings",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
         SettingsStore.Save(settings);
         DialogResult = true;
     }

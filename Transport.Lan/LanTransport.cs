@@ -38,9 +38,19 @@ public sealed class LanTransport : IRoomTransport
         if (_listener is not null) return Task.CompletedTask;
         _listener = new HttpListener();
         var port = _options.Port == 0 ? GetFreePort() : _options.Port;
-        LocalUri = new Uri($"http://127.0.0.1:{port}/");
+        LocalUri = new Uri($"http://+:{port}/");
         _listener.Prefixes.Add(LocalUri.ToString());
-        _listener.Start();
+        try
+        {
+            _listener.Start();
+        }
+        catch (HttpListenerException)
+        {
+            _listener.Prefixes.Clear();
+            LocalUri = new Uri($"http://127.0.0.1:{port}/");
+            _listener.Prefixes.Add(LocalUri.ToString());
+            _listener.Start();
+        }
         _serverTask = Task.Run(() => ServeAsync(_listener, cancellationToken), cancellationToken);
         return Task.CompletedTask;
     }
