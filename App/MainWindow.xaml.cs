@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +7,7 @@ using Core;
 using Transport.Lan;
 using Transport.Cloud;
 using MessageBox = System.Windows.MessageBox;
+using System.ComponentModel;
 
 namespace DropRoom;
 
@@ -19,6 +19,7 @@ public partial class MainWindow : Window
     private IRoomTransport transport;
     private string destinationFolder;
     private readonly bool startedFromExplorer;
+    private bool allowShutdown;
 
     public MainWindow(string mode = "", string? path = null)
     {
@@ -71,6 +72,19 @@ public partial class MainWindow : Window
         }
     }
 
+    public void AllowShutdown() => allowShutdown = true;
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (!allowShutdown)
+        {
+            e.Cancel = true;
+            Hide();
+            return;
+        }
+        base.OnClosing(e);
+    }
+
     private void Settings_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new SettingsWindow(settings) { Owner = this };
@@ -117,13 +131,8 @@ public partial class MainWindow : Window
             transfers.Add(new TransferRow(descriptor, path, settings.DisplayName));
             EmptyStateText.Text = "Shared securely. Select it to test receiving with the PIN you chose.";
         }
-        if (explorerMode)
-            Close();
-        else
-        {
-            Show();
-            Activate();
-        }
+        Show();
+        WindowState = WindowState.Minimized;
     }
 
     private void Receive_Click(object sender, RoutedEventArgs e)
@@ -142,13 +151,8 @@ public partial class MainWindow : Window
         dialog.ShowDialog();
         if (dialog.SelectedFolder is not null)
             destinationFolder = dialog.SelectedFolder;
-        if (explorerMode)
-            Close();
-        else
-        {
-            Show();
-            Activate();
-        }
+        Show();
+        WindowState = WindowState.Minimized;
     }
 
     private async void TransfersList_SelectionChanged(object sender, SelectionChangedEventArgs e)

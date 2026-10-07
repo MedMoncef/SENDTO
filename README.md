@@ -72,8 +72,11 @@ HKCU.
   enforced by the sender in LAN mode.
 - A 50 MB file cap and short default expiry reduce accidental abuse.
 
-Tray integration, multicast discovery, access-request polish, delayed-rendered
-Explorer drag-out, and full cross-PC Office sharing remain subsequent additions.
+Multicast discovery, access-request polish, delayed-rendered Explorer drag-out,
+and full cross-PC Office sharing remain subsequent additions. DropRoom stays
+running in the Windows notification area when its main window is closed or
+after an Explorer send/receive action. Use the tray icon to reopen it, or
+choose **Exit DropRoom** from the tray menu to stop the local server.
 The receive flow includes a progress bar and cancellation while the encrypted
 payload is downloaded. The current LAN fallback binds to loopback if Windows
 refuses the non-loopback listener; in that case the installer/firewall and
