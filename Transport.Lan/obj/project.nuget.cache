@@ -1,16 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "Y+R+GdynFl4=",
+  "dgSpecHash": "Vksf7JEcuQE=",
   "success": true,
   "projectFilePath": "C:\\Users\\lenovo\\Desktop\\SENDTO\\RoomTransfer\\Transport.Lan\\Transport.Lan.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\lenovo\\.nuget\\packages\\libsodium\\1.0.22\\libsodium.1.0.22.nupkg.sha512",
     "C:\\Users\\lenovo\\.nuget\\packages\\sodium.core\\1.4.1\\sodium.core.1.4.1.nupkg.sha512",
     "C:\\Users\\lenovo\\.nuget\\packages\\system.reactive\\5.0.0\\system.reactive.5.0.0.nupkg.sha512",
-    "C:\\Users\\lenovo\\.nuget\\packages\\zeroconf\\3.7.16\\zeroconf.3.7.16.nupkg.sha512",
-    "C:\\Users\\lenovo\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.12\\microsoft.netcore.app.runtime.win-x64.10.0.12.nupkg.sha512",
-    "C:\\Users\\lenovo\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.12\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.12.nupkg.sha512",
-    "C:\\Users\\lenovo\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.12\\microsoft.aspnetcore.app.runtime.win-x64.10.0.12.nupkg.sha512"
+    "C:\\Users\\lenovo\\.nuget\\packages\\zeroconf\\3.7.16\\zeroconf.3.7.16.nupkg.sha512"
   ],
   "logs": []
 }
