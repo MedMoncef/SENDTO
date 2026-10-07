@@ -28,9 +28,13 @@
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Border Width="40" Height="40" CornerRadius="13" Background="#635BFF" Margin="0,0,11,0">
-                            <TextBlock Text="D" Foreground="White" FontSize="24" FontWeight="Bold"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Width="44" Height="44" CornerRadius="14" Background="#090B14" Margin="0,0,11,0"
+                                Padding="2">
+                            <Border CornerRadius="11" Background="#635BFF">
+                                <TextBlock Text="D" Foreground="White" FontSize="24" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           TextAlignment="Center"/>
+                            </Border>
                         </Border>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="DropRoom" Foreground="White" FontSize="23" FontWeight="SemiBold"/>
@@ -57,13 +61,15 @@
         </Border>
         <Grid Grid.Column="1" Margin="34">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <DockPanel Grid.Row="0" Margin="0,0,0,28">
+            <Grid Grid.Row="0" Margin="0,0,0,28">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel>
                     <TextBlock Text="Your room" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource Ink}"/>
                     <TextBlock Text="Send a file in seconds, or pick one up where you need it."
                                Foreground="{StaticResource Muted}" Margin="0,5,0,0" FontSize="14"/>
                 </StackPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
                     <Button Content="Receive here" Background="#CFFFFFFF" Foreground="{StaticResource Ink}"
                             BorderBrush="#AFFFFFFF" BorderThickness="1" Click="Receive_Click"
                             Effect="{StaticResource SmallShadow}"/>
@@ -71,15 +77,17 @@
                             Effect="{StaticResource SmallShadow}"
                             Click="Send_Click"/>
                 </StackPanel>
-            </DockPanel>
+            </Grid>
             <Border Grid.Row="1" Background="#AFFFFFFF" BorderBrush="#B8FFFFFF" BorderThickness="1"
                     CornerRadius="16" Padding="16" Margin="0,0,0,20"
                     Effect="{StaticResource SmallShadow}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="●" Foreground="#635BFF" FontSize="18" Margin="0,0,10,0"/>
-                    <TextBlock x:Name="ModeText" Text="Local network (LAN)" Foreground="#423B9A" FontWeight="SemiBold"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="9" Height="9" Fill="#635BFF" Margin="0,0,12,0"
+                             VerticalAlignment="Center"/>
+                    <TextBlock x:Name="ModeText" Text="Local network (LAN)" Foreground="#423B9A"
+                               FontWeight="SemiBold" VerticalAlignment="Center"/>
                     <TextBlock x:Name="ModeDescription" Text="  Files stay on your local network and expire automatically."
-                               Foreground="#5A55A8"/>
+                               Foreground="#5A55A8" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
             <Border Grid.Row="2" Background="#DFFFFFFF" CornerRadius="20" BorderBrush="#B8FFFFFF" BorderThickness="1"

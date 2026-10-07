@@ -12,9 +12,13 @@
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <StackPanel Margin="0,0,0,20">
             <StackPanel Orientation="Horizontal">
-                <Border Width="38" Height="38" CornerRadius="12" Background="#635BFF" Margin="0,0,12,0">
-                    <TextBlock Text="D" Foreground="White" FontSize="22" FontWeight="Bold"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border Width="42" Height="42" CornerRadius="13" Background="#090B14" Margin="0,0,12,0"
+                        Padding="2">
+                    <Border CornerRadius="10" Background="#635BFF">
+                        <TextBlock Text="D" Foreground="White" FontSize="22" FontWeight="Bold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   TextAlignment="Center"/>
+                    </Border>
                 </Border>
                 <StackPanel>
                     <TextBlock Text="Send to room" FontSize="26" FontWeight="SemiBold" Foreground="#101828"/>
