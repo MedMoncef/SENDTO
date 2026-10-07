@@ -8,6 +8,13 @@
         <SolidColorBrush x:Key="Line" Color="#E4E7EC"/>
         <SolidColorBrush x:Key="Primary" Color="#635BFF"/>
         <SolidColorBrush x:Key="Surface" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="Glass" Color="#EFFFFFFF"/>
+        <SolidColorBrush x:Key="GlassStrong" Color="#F7FFFFFF"/>
+        <SolidColorBrush x:Key="GlassLine" Color="#B8FFFFFF"/>
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="28" ShadowDepth="8" Direction="270"
+                          Color="#52242A56" Opacity="0.18"/>
+        <DropShadowEffect x:Key="SmallShadow" BlurRadius="14" ShadowDepth="3" Direction="270"
+                          Color="#40242A56" Opacity="0.16"/>
         <Style TargetType="Button">
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -15,6 +22,8 @@
             <Setter Property="Margin" Value="0,0,8,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#F7FFFFFF"/>
+            <Setter Property="Foreground" Value="#172033"/>
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="FontSize" Value="13"/>
