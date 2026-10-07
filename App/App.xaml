@@ -3,6 +3,39 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:DropRoom">
     <Application.Resources>
+        <DrawingImage x:Key="DropRoomLogo">
+            <DrawingImage.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#080A12">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,100,100" RadiusX="25" RadiusY="25"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing>
+                        <GeometryDrawing.Brush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#7468FF" Offset="0"/>
+                                <GradientStop Color="#4A35D6" Offset="0.58"/>
+                                <GradientStop Color="#16C7D9" Offset="1"/>
+                            </LinearGradientBrush>
+                        </GeometryDrawing.Brush>
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="7,7,86,86" RadiusX="20" RadiusY="20"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#FFFFFFFF">
+                        <GeometryDrawing.Geometry>
+                            <PathGeometry Figures="M31,24 L49,24 C67,24 77,34 77,50 C77,66 67,76 49,76 L31,76 Z M43,35 L43,65 L49,65 C58,65 64,60 64,50 C64,40 58,35 49,35 Z"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#48FFFFFF">
+                        <GeometryDrawing.Geometry>
+                            <EllipseGeometry Center="75,20" RadiusX="5" RadiusY="5"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
         <SolidColorBrush x:Key="Ink" Color="#172033"/>
         <SolidColorBrush x:Key="Muted" Color="#667085"/>
         <SolidColorBrush x:Key="Line" Color="#E4E7EC"/>

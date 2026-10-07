@@ -25,22 +25,25 @@ compile `Installer\DropRoom.iss` with Inno Setup, then run the generated
 a file and choose **Show more options → Send with DropRoom...**, or right-click
 inside a folder and choose **Show more options → Grab from DropRoom...**.
 
-The application targets .NET 10 and uses WPF. The LAN transport keeps the same
-encrypted payload format that a future cloud transport can use.
+The application targets .NET 10 and uses WPF. The project includes a shared
+DropRoom logo asset used by the app, published executable, Start Menu shortcut,
+and installer.
 
 ## Delivery modes
 
 The app deliberately names the two routes explicitly:
 
-- **Local network (LAN):** direct transfer between PCs on the same reachable
-  network. Files are hosted by the sender and expire locally.
-- **Cloud relay:** the client uploads encrypted payloads to an HTTP backend
+- **Office sharing:** the local-device route. The sender hosts the encrypted
+  file and it expires locally. The current MVP has the local HTTP host and
+  transport contracts; automatic cross-PC discovery, notifications, and
+  synchronized room lists are still being completed.
+- **Public send:** the external internet route. The client uploads encrypted payloads to an HTTP backend
   (normally a Cloudflare Worker backed by R2/D1). The client never receives or
   stores database credentials.
 
-Configure **Settings → Cloud backend URL** with the base URL of your deployed
-Worker/API, for example `https://files.example.com/`, then choose **Cloud
-relay** as the default delivery. This project contains the typed client in
+Configure **Settings → Public send → Backend URL** with the base URL of your
+deployed Worker/API, for example `https://files.example.com/`, then choose
+**Public send** as the default delivery. This project contains the typed client in
 `Transport.Cloud`; it does not include a hosted Worker or database deployment.
 The backend must implement the documented `/v1/rooms/{roomId}/transfers`
 endpoints and enforce quotas, PIN attempts, access lists, and expiry.
@@ -69,8 +72,9 @@ HKCU.
   enforced by the sender in LAN mode.
 - A 50 MB file cap and short default expiry reduce accidental abuse.
 
-Tray integration, multicast discovery, access-request polish, and delayed-rendered
-Explorer drag-out remain subsequent additions. The current LAN fallback binds
-to loopback if Windows refuses the non-loopback listener; in that case the
-installer/firewall and network policy must be corrected before cross-PC LAN
-sharing is possible.
+Tray integration, multicast discovery, access-request polish, delayed-rendered
+Explorer drag-out, and full cross-PC Office sharing remain subsequent additions.
+The receive flow includes a progress bar and cancellation while the encrypted
+payload is downloaded. The current LAN fallback binds to loopback if Windows
+refuses the non-loopback listener; in that case the installer/firewall and
+network policy must be corrected before cross-PC LAN sharing is possible.

@@ -28,14 +28,8 @@
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Border Width="44" Height="44" CornerRadius="14" Background="#090B14" Margin="0,0,11,0"
-                                Padding="2">
-                            <Border CornerRadius="11" Background="#635BFF">
-                                <TextBlock Text="D" Foreground="White" FontSize="24" FontWeight="Bold"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           TextAlignment="Center"/>
-                            </Border>
-                        </Border>
+                        <Image Width="44" Height="44" Margin="0,0,11,0"
+                               Source="{DynamicResource DropRoomLogo}"/>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="DropRoom" Foreground="White" FontSize="23" FontWeight="SemiBold"/>
                             <TextBlock Text="Private file sharing" Foreground="#AAB1C5" Margin="0,2,0,0"/>
