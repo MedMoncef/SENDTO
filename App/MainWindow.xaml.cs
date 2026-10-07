@@ -29,7 +29,7 @@ public partial class MainWindow : Window
         var roomId = Core.RoomKey.CreateRoomId(settings.RoomKey);
         var device = new DeviceSettings(settings.DeviceId, settings.DisplayName, roomId);
         var room = new RoomSettings(roomId, "My room", "local");
-        transport = settings.DefaultTransport == "Cloud relay" &&
+        transport = settings.DefaultTransport == "Public send" &&
             Uri.TryCreate(settings.BackendUrl, UriKind.Absolute, out var backend)
             ? new CloudTransport(new CloudTransportOptions { Room = room, Device = device, BackendUrl = backend })
             : new LanTransport(new LanTransportOptions { Room = room, Device = device, Port = 41872 });
@@ -51,9 +51,9 @@ public partial class MainWindow : Window
         TransfersList.ItemsSource = transferView;
         RoomStatusText.Text = $"{settings.DisplayName}  •  room {roomId[..8]}  •  {settings.DefaultTransport}";
         ModeText.Text = settings.DefaultTransport;
-        ModeDescription.Text = settings.DefaultTransport == "Cloud relay"
-            ? "  Files use your configured backend and remain encrypted."
-            : "  Files stay on your local network and expire automatically.";
+        ModeDescription.Text = settings.DefaultTransport == "Public send"
+            ? "  Encrypted transfers use your configured public backend."
+            : "  Office transfers are hosted by the sender and expire automatically.";
     }
 
     public void HandleCommand(string mode, string? path)
@@ -80,9 +80,9 @@ public partial class MainWindow : Window
             destinationFolder = settings.DefaultSaveFolder;
             RoomStatusText.Text = $"{settings.DisplayName}  •  room {Core.RoomKey.CreateRoomId(settings.RoomKey)[..8]}  •  {settings.DefaultTransport}";
             ModeText.Text = settings.DefaultTransport;
-            ModeDescription.Text = settings.DefaultTransport == "Cloud relay"
-                ? "  Files use your configured backend and remain encrypted."
-                : "  Files stay on your local network and expire automatically.";
+            ModeDescription.Text = settings.DefaultTransport == "Public send"
+                ? "  Encrypted transfers use your configured public backend."
+                : "  Office transfers are hosted by the sender and expire automatically.";
         }
     }
 
@@ -92,7 +92,7 @@ public partial class MainWindow : Window
         var roomId = Core.RoomKey.CreateRoomId(settings.RoomKey);
         var room = new RoomSettings(roomId, "My room", "local");
         var device = new DeviceSettings(settings.DeviceId, settings.DisplayName, roomId);
-        transport = settings.DefaultTransport == "Cloud relay" &&
+        transport = settings.DefaultTransport == "Public send" &&
             Uri.TryCreate(settings.BackendUrl, UriKind.Absolute, out var backend)
             ? new CloudTransport(new CloudTransportOptions { Room = room, Device = device, BackendUrl = backend })
             : new LanTransport(new LanTransportOptions { Room = room, Device = device, Port = 41872 });

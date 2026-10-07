@@ -13,7 +13,7 @@ public sealed class UserSettings
     public string DefaultSaveFolder { get; set; } =
         Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
     public string BackendUrl { get; set; } = "";
-    public string DefaultTransport { get; set; } = "Local network";
+    public string DefaultTransport { get; set; } = "Office sharing";
 }
 
 internal static class SettingsStore
@@ -26,7 +26,14 @@ internal static class SettingsStore
         try
         {
             if (File.Exists(Path))
-                return JsonSerializer.Deserialize<UserSettings>(File.ReadAllText(Path)) ?? new UserSettings();
+            {
+                var settings = JsonSerializer.Deserialize<UserSettings>(File.ReadAllText(Path)) ?? new UserSettings();
+                if (settings.DefaultTransport is "Cloud relay" or "Cloud")
+                    settings.DefaultTransport = "Public send";
+                else if (settings.DefaultTransport is "Local network" or "Local network (LAN)")
+                    settings.DefaultTransport = "Office sharing";
+                return settings;
+            }
         }
         catch (JsonException) { }
         return new UserSettings();

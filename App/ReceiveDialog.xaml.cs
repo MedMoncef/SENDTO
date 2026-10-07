@@ -16,6 +16,7 @@ public partial class ReceiveDialog : Window
     private readonly string initialFolder;
     private readonly ObservableCollection<ReceiveRow> rows = new();
     private readonly ICollectionView rowsView;
+    private CancellationTokenSource? downloadCancellation;
 
     public string? SelectedFolder { get; private set; }
 
@@ -69,6 +70,12 @@ public partial class ReceiveDialog : Window
             return;
         try
         {
+            downloadCancellation?.Dispose();
+            downloadCancellation = new CancellationTokenSource();
+            DownloadProgress.Visibility = Visibility.Visible;
+            DownloadProgress.Value = 0;
+            CancelDownloadButton.Visibility = Visibility.Visible;
+            StatusText.Text = "Downloading securely…";
             var folder = initialFolder;
             if (!Directory.Exists(folder))
             {
@@ -78,19 +85,49 @@ public partial class ReceiveDialog : Window
                 folder = picker.SelectedPath;
             }
             var received = await transport.FetchAsync(RoomKey.CreateRoomId(settings.RoomKey),
-                pinDialog.Pin, row.Metadata.TransferId);
+                pinDialog.Pin, row.Metadata.TransferId, downloadCancellation.Token);
             var target = Path.Combine(folder, received.Metadata.FileName);
             await using var output = File.Create(target);
-            await received.Content.CopyToAsync(output);
+            await CopyWithProgressAsync(received.Content, output, received.Metadata.Length,
+                downloadCancellation.Token);
             SelectedFolder = folder;
             MessageBox.Show($"Saved to {target}", "Transfer complete",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             Close();
         }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Download cancelled.";
+        }
         catch (Exception ex)
         {
             MessageBox.Show($"This transfer could not be unlocked.\n\n{ex.Message}", "Receive failed",
                 MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            DownloadProgress.Visibility = Visibility.Collapsed;
+            CancelDownloadButton.Visibility = Visibility.Collapsed;
+            downloadCancellation?.Dispose();
+            downloadCancellation = null;
+        }
+    }
+
+    private void CancelDownload_Click(object sender, RoutedEventArgs e) =>
+        downloadCancellation?.Cancel();
+
+    private async Task CopyWithProgressAsync(Stream input, Stream output, long length,
+        CancellationToken cancellationToken)
+    {
+        var buffer = new byte[64 * 1024];
+        long copied = 0;
+        int read;
+        while ((read = await input.ReadAsync(buffer, cancellationToken)) > 0)
+        {
+            await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            copied += read;
+            if (length > 0)
+                DownloadProgress.Value = copied * 100d / length;
         }
     }
 
