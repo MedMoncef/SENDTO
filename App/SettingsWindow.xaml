@@ -1,7 +1,7 @@
 <Window x:Class="DropRoom.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Settings" Width="600" Height="760" MinHeight="560" WindowStartupLocation="CenterOwner"
+        Title="Settings" Icon="{DynamicResource DropRoomLogo}" Width="600" Height="760" MinHeight="560" WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize" Background="#EEF1FF">
     <Window.Resources>
         <Style TargetType="TabControl">

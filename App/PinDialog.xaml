@@ -1,7 +1,7 @@
 <Window x:Class="DropRoom.PinDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Enter PIN" Width="420" Height="290" MinHeight="250" WindowStartupLocation="CenterOwner"
+        Title="Enter PIN" Icon="{DynamicResource DropRoomLogo}" Width="420" Height="290" MinHeight="250" WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" Background="#F5F7FB">
     <Grid Margin="24">
         <Grid.RowDefinitions>

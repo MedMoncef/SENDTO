@@ -1,10 +1,31 @@
 <Window x:Class="DropRoom.ReceiveDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Grab from DropRoom" Width="560" Height="620" MinHeight="480"
+        Title="Grab from DropRoom" Icon="{DynamicResource DropRoomLogo}" Width="620" Height="650" MinHeight="500"
         WindowStartupLocation="CenterScreen" ResizeMode="CanResize"
-        ShowInTaskbar="True" Background="#F5F7FB">
+        ShowInTaskbar="True" Background="#EEF1FF">
+    <Window.Resources>
+        <Style TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Opacity" Value="0.82"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Grid Margin="24">
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#F7F8FF" Offset="0"/>
+                <GradientStop Color="#E8E7FF" Offset="0.55"/>
+                <GradientStop Color="#F8F3FF" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
             <Image Width="42" Height="42" Margin="0,0,12,0"
@@ -14,15 +35,27 @@
                 <TextBlock Text="Choose a shared file and save it here." Foreground="#667085"/>
             </StackPanel>
         </StackPanel>
-        <DockPanel Grid.Row="1" Margin="0,0,0,14">
-            <TextBox x:Name="SearchBox" TextChanged="SearchBox_TextChanged" ToolTip="Filter shared files"/>
-            <Button DockPanel.Dock="Right" Content="Refresh" Margin="10,0,0,0" Click="Refresh_Click"/>
-        </DockPanel>
-        <ListView Grid.Row="2" x:Name="TransfersList" BorderThickness="0" Background="Transparent"
+        <Grid Grid.Row="1" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <Border Background="#CFFFFFFF" BorderBrush="#B8FFFFFF" BorderThickness="1"
+                    CornerRadius="12" Height="42" Padding="12,0">
+                <Grid>
+                    <TextBlock Text="⌕" FontSize="19" Foreground="#667085" VerticalAlignment="Center"/>
+                    <TextBox x:Name="SearchBox" Margin="28,0,0,0" VerticalContentAlignment="Center"
+                             Background="Transparent" BorderThickness="0"
+                             TextChanged="SearchBox_TextChanged" ToolTip="Filter shared files"/>
+                </Grid>
+            </Border>
+            <Button Grid.Column="1" Content="↻  Refresh" Height="42" Margin="10,0,0,0"
+                    Padding="16,8" Click="Refresh_Click" Effect="{StaticResource SmallShadow}"/>
+        </Grid>
+        <Border Grid.Row="2" Background="#AFFFFFFF" BorderBrush="#B8FFFFFF" BorderThickness="1"
+                CornerRadius="18" Padding="10" Effect="{StaticResource CardShadow}">
+        <ListView x:Name="TransfersList" BorderThickness="0" Background="Transparent"
                   SelectionChanged="TransfersList_SelectionChanged">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="White" BorderBrush="#E4E7EC" BorderThickness="1" CornerRadius="12"
+                    <Border Background="#DFFFFFFF" BorderBrush="#B8FFFFFF" BorderThickness="1" CornerRadius="14"
                             Padding="14" Margin="0,0,0,9">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -37,6 +70,7 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+        </Border>
         <Grid Grid.Row="3" Margin="0,12,0,0">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel>
