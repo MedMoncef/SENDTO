@@ -25,6 +25,10 @@ compile `Installer\DropRoom.iss` with Inno Setup, then run the generated
 a file and choose **Show more options → Send with DropRoom...**, or right-click
 inside a folder and choose **Show more options → Grab from DropRoom...**.
 
+The installer icon is compiled from `App\Assets\DropRoom.ico` through the
+`SetupIconFile` setting. Recompile the installer after changing the logo; an
+existing `DropRoom-Setup.exe` keeps the icon it had when it was created.
+
 The application targets .NET 10 and uses WPF. The project includes a shared
 DropRoom logo asset used by the app, published executable, Start Menu shortcut,
 and installer.
